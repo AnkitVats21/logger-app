@@ -3,6 +3,9 @@
 {{define "content"}}
 <div class="max-w-4xl mx-auto">
     <header class="text-center mb-10">
+        <p class="text-sm font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">
+            {{if .UserName}}Welcome back, {{.UserName}}!{{else}}Hello there!{{end}}
+        </p>
         <h1 class="text-5xl font-black tracking-tight text-gray-900 dark:text-white mb-2" id="live-clock">--:--:--</h1>
         <p class="text-xl text-gray-500 dark:text-gray-400 font-medium" id="current-date">Loading...</p>
     </header>
