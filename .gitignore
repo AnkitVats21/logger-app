@@ -1,1 +1,14 @@
+# Databases
 *.db
+
+# Build artifacts
+.build/
+logger-app
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Go specific
+vendor/
+go.work
