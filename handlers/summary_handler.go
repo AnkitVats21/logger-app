@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"logger-app/models"
 	"logger-app/service"
 	"logger-app/storage"
@@ -11,18 +12,31 @@ import (
 )
 
 func GetRangeSummary(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userid")
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
+
+	if userID == "" {
+		http.Error(w, "userid missing", http.StatusBadRequest)
+		return
+	}
 
 	if start == "" || end == "" {
 		http.Error(w, "missing start or end", http.StatusBadRequest)
 		return
 	}
 
-	events, err := storage.GetEventsInRange(start, end)
+	exists, _ := storage.UserExists(userID)
+	if !exists {
+		http.Error(w, "invalid userid", http.StatusUnauthorized)
+		return
+	}
+
+	events, err := storage.GetEventsInRange(userID, start, end)
 	if err != nil {
+		log.Printf("GetEventsInRange Error: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -75,11 +89,24 @@ func GetRangeSummary(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetTodaySummary(w http.ResponseWriter, r *http.Request) {
+	userID := r.URL.Query().Get("userid")
+	if userID == "" {
+		http.Error(w, "userid missing", http.StatusBadRequest)
+		return
+	}
+
+	exists, _ := storage.UserExists(userID)
+	if !exists {
+		http.Error(w, "invalid userid", http.StatusUnauthorized)
+		return
+	}
+
 	// For accurate simulation of elapsed time up to the exact minute
 	now := time.Now()
 
-	events, err := storage.GetEventsForToday(now)
+	events, err := storage.GetEventsForToday(userID, now)
 	if err != nil {
+		log.Printf("GetEventsForToday Error: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -89,10 +116,11 @@ func GetTodaySummary(w http.ResponseWriter, r *http.Request) {
 	startOfToday := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 
 	if len(events) == 0 || events[0].Timestamp.After(startOfToday) {
-		lastEvent, err := storage.GetLatestEvent(startOfToday)
+		lastEvent, err := storage.GetLatestEvent(userID, startOfToday)
 		if err == nil && lastEvent != nil {
 			// Synthetic event at midnight
 			synthetic := models.Event{
+				UserID:    userID,
 				Place:     lastEvent.Place,
 				Timestamp: startOfToday,
 			}

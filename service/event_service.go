@@ -9,8 +9,8 @@ import (
 	"time"
 )
 
-func LogEvent(place string) error {
-	latest, err := storage.GetLatestEvent(time.Now())
+func LogEvent(userID, place string) error {
+	latest, err := storage.GetLatestEvent(userID, time.Now())
 	if err != nil && err != sql.ErrNoRows {
 		return fmt.Errorf("failed to fetch latest event: %w", err)
 	}
@@ -28,6 +28,7 @@ func LogEvent(place string) error {
 	}
 
 	event := models.Event{
+		UserID:    userID,
 		Place:     place,
 		Timestamp: time.Now(),
 	}

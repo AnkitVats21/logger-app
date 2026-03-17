@@ -6,5 +6,7 @@ import (
 )
 
 func DashboardPage(w http.ResponseWriter, r *http.Request) {
-	service.RenderTemplate(w, "dashboard.html", nil)
+	service.RenderTemplate(w, "dashboard.html", map[string]interface{}{
+		"ActivePage": "dashboard",
+	})
 }

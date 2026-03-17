@@ -28,6 +28,7 @@ func CalculateRangeSummary(events []models.Event) models.RangeSummary {
 		last := dayEvents[len(dayEvents)-1]
 
 		dayEvents = append(dayEvents, models.Event{
+			UserID:    last.UserID,
 			Place:     last.Place,
 			Timestamp: endTime,
 		})

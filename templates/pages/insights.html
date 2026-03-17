@@ -183,7 +183,8 @@
         lucide.createIcons();
 
         try {
-            const res = await fetch(`/summary/range?start=${start}&end=${end}&page=${currentPage}&limit=${currentLimit}`);
+            const userId = getUserId();
+            const res = await fetch(`/api/range-summary?userid=${userId}&start=${start}&end=${end}&page=${currentPage}&limit=${currentLimit}`);
 
             if (!res.ok) {
                 throw new Error(`API Error: ${res.status} ${res.statusText}`);

@@ -24,13 +24,26 @@ func main() {
 	db.InitDB()
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		icon, err := StaticFS.ReadFile("static/favicon.ico")
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "image/x-icon")
+		w.Write(icon)
+	})
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/" {
+			http.NotFound(w, r)
+			return
+		}
 		http.Redirect(w, r, "/dashboard", http.StatusFound)
 	})
 	mux.HandleFunc("/events", handlers.GetEvents)
 	mux.HandleFunc("/log", handlers.LogEventFromQuery)
-	mux.HandleFunc("/summary/range", handlers.GetRangeSummary)
-	mux.HandleFunc("/summary/today", handlers.GetTodaySummary)
+	mux.HandleFunc("/api/range-summary", handlers.GetRangeSummary)
+	mux.HandleFunc("/api/today-summary", handlers.GetTodaySummary)
 	mux.HandleFunc("/dashboard", handlers.DashboardPage)
 	mux.HandleFunc("/insights", handlers.InsightsPage)
 	loggedMux := handlers.LoggingMiddleware(mux)

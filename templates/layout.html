@@ -8,10 +8,120 @@
     <title>{{block "title" .}}Life Dashboard{{end}}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>tailwind.config = { darkMode: 'class' }</script>
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <script>
+        tailwind.config = { darkMode: 'class' }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        function getUserId() {
+            return localStorage.getItem('userId');
+        }
+
+        async function checkUser() {
+            const userModal = document.getElementById('userModal');
+            const userId = getUserId();
+            if (!userId) {
+                userModal?.classList.remove('hidden');
+            } else {
+                try {
+                    // Proactively validate the ID
+                    const res = await fetch(`/api/today-summary?userid=${userId}`);
+                    if (res.status === 401) {
+                        logout(); // Invalid ID persisted, force logout
+                    } else {
+                        userModal?.classList.add('hidden');
+                        document.cookie = `userid=${userId}; path=/; max-age=31536000`;
+                    }
+                } catch (e) {
+                    // If network fails, we trust the local ID for now but keep modal hidden
+                    userModal?.classList.add('hidden');
+                }
+            }
+        }
+
+        async function saveUserId() {
+            const userIdInput = document.getElementById('userIdInput');
+            const errorMsg = document.getElementById('errorMsg');
+            const id = userIdInput.value.trim();
+            
+            if (!id) {
+                if (errorMsg) {
+                    errorMsg.innerText = "Please enter a valid ID";
+                    errorMsg.classList.remove('hidden');
+                }
+                return;
+            }
+            
+            try {
+                // Pre-validation: ensure ID exists on server before saving
+                const res = await fetch(`/api/today-summary?userid=${id}`);
+                if (res.ok) {
+                    localStorage.setItem('userId', id);
+                    document.cookie = `userid=${id}; path=/; max-age=31536000`;
+                    window.location.reload();
+                } else if (res.status === 401) {
+                    if (errorMsg) {
+                        errorMsg.innerText = "Invalid User ID. Please use a valid ID.";
+                        errorMsg.classList.remove('hidden');
+                    }
+                    localStorage.removeItem('userId');
+                    document.cookie = "userid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+                } else {
+                    if (errorMsg) {
+                        errorMsg.innerText = "Validation failed. Try again later.";
+                        errorMsg.classList.remove('hidden');
+                    }
+                }
+            } catch (e) {
+                if (errorMsg) {
+                    errorMsg.innerText = "Connection error.";
+                    errorMsg.classList.remove('hidden');
+                }
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('userId');
+            document.cookie = "userid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+            window.location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            checkUser();
+        });
+    </script>
 </head>
 
 <body class="bg-gray-50 dark:bg-slate-900 min-h-screen text-gray-800 dark:text-gray-100 transition-colors">
+
+    <!-- User Identity Modal -->
+    <div id="userModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full p-8 border border-gray-100 dark:border-slate-700">
+            <h2 class="text-2xl font-bold mb-2 flex items-center gap-2">
+                <i data-lucide="user-plus" class="text-blue-500"></i>
+                Identify Yourself
+            </h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-6 text-sm">Please enter your unique User ID to access your dashboard.</p>
+            
+            <div class="space-y-4">
+                <input type="text" id="userIdInput" placeholder="Enter your User ID" 
+                    class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                <button onclick="saveUserId()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl transition-all shadow-lg shadow-blue-500/25">
+                    Continue to Dashboard
+                </button>
+            </div>
+            <p id="errorMsg" class="text-red-500 text-xs mt-3 hidden"></p>
+        </div>
+    </div>
 
     {{template "nav" .}}
 
@@ -20,14 +130,7 @@
     </main>
 
     <script>
-        lucide.createIcons();
-        function toggleDarkMode() {
-            document.documentElement.classList.toggle('dark');
-            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
-        }
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-        }
+        // Placeholder for any page-specific scripts that might need to run after content
     </script>
 </body>
 

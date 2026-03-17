@@ -146,8 +146,11 @@
     }
 
     async function loadTodayData() {
+        const userId = getUserId();
+        if (!userId) return;
+
         try {
-            const res = await fetch('/summary/today');
+            const res = await fetch(`/api/today-summary?userid=${userId}`);
             const data = await res.json();
 
             // Extract decimal hours
@@ -307,8 +310,11 @@
     }
 
     async function logEvent(place) {
+        const userId = getUserId();
+        if (!userId) return showError("User ID not found");
+
         try {
-            const res = await fetch(`/log?place=${place}`);
+            const res = await fetch(`/log?userid=${userId}&place=${place}`);
             if (!res.ok) {
                 const text = await res.text();
                 showToast(text);

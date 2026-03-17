@@ -64,7 +64,7 @@
                     <label for="limit-select">Per page:</label>
                     <select id="limit-select"
                         class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-1 px-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
-                        onchange="window.location.href='?page=1&limit='+this.value">
+                        onchange="window.location.href='?userid='+getUserId()+'&page=1&limit='+this.value">
                         <option value="10" {{ if eq .Limit 10 }}selected{{ end }}>10</option>
                         <option value="25" {{ if eq .Limit 25 }}selected{{ end }}>25</option>
                         <option value="50" {{ if eq .Limit 50 }}selected{{ end }}>50</option>
@@ -73,15 +73,15 @@
                 </div>
 
                 <div class="flex gap-2">
-                    {{ if gt .CurrentPage 1 }}
-                    <a href="?page={{ sub .CurrentPage 1 }}&limit={{ .Limit }}"
+                    {{ if and .CurrentPage (gt (int .CurrentPage) 1) }}
+                    <a href="#" onclick="window.location.href='?userid='+getUserId()+'&page={{ sub (int .CurrentPage) 1 }}&limit={{ .Limit }}'; return false;"
                         class="px-4 py-2 text-sm font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2">
                         <i data-lucide="chevron-left" class="w-4 h-4"></i> Prev
                     </a>
                     {{ end }}
 
                     {{ if .HasMore }}
-                    <a href="?page={{ add .CurrentPage 1 }}&limit={{ .Limit }}"
+                    <a href="#" onclick="window.location.href='?userid='+getUserId()+'&page={{ add (int .CurrentPage) 1 }}&limit={{ .Limit }}'; return false;"
                         class="px-4 py-2 text-sm font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2">
                         Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
                     </a>

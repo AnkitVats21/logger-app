@@ -7,24 +7,24 @@ import (
 )
 
 func InsertEvent(event models.Event) error {
-	query := `INSERT INTO events(place, timestamp) VALUES(?, ?)`
+	query := `INSERT INTO events(user_id, place, timestamp) VALUES(?, ?, ?)`
 
-	_, err := db.DB.Exec(query, event.Place, event.Timestamp)
+	_, err := db.DB.Exec(query, event.UserID, event.Place, event.Timestamp)
 	return err
 }
 
-func GetLatestEvent(now time.Time) (*models.Event, error) {
-	row := db.DB.QueryRow("SELECT id, place, timestamp FROM events WHERE timestamp <= ? ORDER BY timestamp DESC LIMIT 1", now)
+func GetLatestEvent(userID string, now time.Time) (*models.Event, error) {
+	row := db.DB.QueryRow("SELECT id, user_id, place, timestamp FROM events WHERE user_id = ? AND timestamp <= ? ORDER BY timestamp DESC LIMIT 1", userID, now)
 	var e models.Event
-	err := row.Scan(&e.ID, &e.Place, &e.Timestamp)
+	err := row.Scan(&e.ID, &e.UserID, &e.Place, &e.Timestamp)
 	if err != nil {
 		return nil, err
 	}
 	return &e, nil
 }
 
-func GetAllEvents() ([]models.Event, error) {
-	rows, err := db.DB.Query("SELECT id, place, timestamp FROM events ORDER BY timestamp DESC")
+func GetAllEvents(userID string) ([]models.Event, error) {
+	rows, err := db.DB.Query("SELECT id, user_id, place, timestamp FROM events WHERE user_id = ? ORDER BY timestamp DESC", userID)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func GetAllEvents() ([]models.Event, error) {
 
 	for rows.Next() {
 		var e models.Event
-		err := rows.Scan(&e.ID, &e.Place, &e.Timestamp)
+		err := rows.Scan(&e.ID, &e.UserID, &e.Place, &e.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -44,10 +44,10 @@ func GetAllEvents() ([]models.Event, error) {
 	return events, nil
 }
 
-func GetEventsPaginated(offset, limit int) ([]models.Event, error) {
+func GetEventsPaginated(userID string, offset, limit int) ([]models.Event, error) {
 	rows, err := db.DB.Query(
-		"SELECT id, place, timestamp FROM events ORDER BY timestamp DESC LIMIT ? OFFSET ?",
-		limit, offset,
+		"SELECT id, user_id, place, timestamp FROM events WHERE user_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+		userID, limit, offset,
 	)
 	if err != nil {
 		return nil, err
@@ -58,7 +58,7 @@ func GetEventsPaginated(offset, limit int) ([]models.Event, error) {
 
 	for rows.Next() {
 		var e models.Event
-		err := rows.Scan(&e.ID, &e.Place, &e.Timestamp)
+		err := rows.Scan(&e.ID, &e.UserID, &e.Place, &e.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -68,15 +68,15 @@ func GetEventsPaginated(offset, limit int) ([]models.Event, error) {
 	return events, nil
 }
 
-func GetEventsInRange(start, end string) ([]models.Event, error) {
+func GetEventsInRange(userID string, start, end string) ([]models.Event, error) {
 	query := `
-	SELECT id, place, timestamp
+	SELECT id, user_id, place, timestamp
 	FROM events
-	WHERE DATE(timestamp) BETWEEN ? AND ?
+	WHERE user_id = ? AND DATE(timestamp) BETWEEN ? AND ?
 	ORDER BY timestamp ASC
 	`
 
-	rows, err := db.DB.Query(query, start, end)
+	rows, err := db.DB.Query(query, userID, start, end)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func GetEventsInRange(start, end string) ([]models.Event, error) {
 
 	for rows.Next() {
 		var e models.Event
-		err := rows.Scan(&e.ID, &e.Place, &e.Timestamp)
+		err := rows.Scan(&e.ID, &e.UserID, &e.Place, &e.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -96,18 +96,18 @@ func GetEventsInRange(start, end string) ([]models.Event, error) {
 	return events, nil
 }
 
-func GetEventsForToday(now time.Time) ([]models.Event, error) {
+func GetEventsForToday(userID string, now time.Time) ([]models.Event, error) {
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location()).Format("2006-01-02 15:04:05")
 	endOfDay := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, now.Location()).Format("2006-01-02 15:04:05")
 
 	query := `
-	SELECT id, place, timestamp
+	SELECT id, user_id, place, timestamp
 	FROM events
-	WHERE timestamp BETWEEN ? AND ?
+	WHERE user_id = ? AND timestamp BETWEEN ? AND ?
 	ORDER BY timestamp ASC
 	`
 
-	rows, err := db.DB.Query(query, startOfDay, endOfDay)
+	rows, err := db.DB.Query(query, userID, startOfDay, endOfDay)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func GetEventsForToday(now time.Time) ([]models.Event, error) {
 	var events []models.Event
 	for rows.Next() {
 		var e models.Event
-		err := rows.Scan(&e.ID, &e.Place, &e.Timestamp)
+		err := rows.Scan(&e.ID, &e.UserID, &e.Place, &e.Timestamp)
 		if err != nil {
 			return nil, err
 		}
@@ -126,8 +126,8 @@ func GetEventsForToday(now time.Time) ([]models.Event, error) {
 	return events, nil
 }
 
-func GetTotalEventsCount() (int, error) {
+func GetTotalEventsCount(userID string) (int, error) {
 	var count int
-	err := db.DB.QueryRow("SELECT COUNT(*) FROM events").Scan(&count)
+	err := db.DB.QueryRow("SELECT COUNT(*) FROM events WHERE user_id = ?", userID).Scan(&count)
 	return count, err
 }

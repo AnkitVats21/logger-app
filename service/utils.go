@@ -25,6 +25,16 @@ func EndOfDay(date string) time.Time {
 var funcMap = template.FuncMap{
 	"add": func(a, b int) int { return a + b },
 	"sub": func(a, b int) int { return a - b },
+	"int": func(i interface{}) int {
+		switch v := i.(type) {
+		case int:
+			return v
+		case int64:
+			return int(v)
+		default:
+			return 0
+		}
+	},
 }
 
 // RenderTemplate renders a page using the shared layout and nav, sourcing files

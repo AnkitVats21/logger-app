@@ -43,7 +43,7 @@
 
 3.  (Optional) Seed the database with 30 days of mock data:
     ```bash
-    go run scripts/seed.go
+    go run scripts/seeder/main.go -userid YOUR_ID
     ```
 
 4.  Run the application:
@@ -55,10 +55,10 @@ The app will be available at `http://localhost:8080`.
 
 ## 📖 Usage
 
--   **Logging**: Click the **Log Home**, **Log Office**, or **Log Outside** buttons on the dashboard to record a transition.
--   **Dashboard**: View your current status, 24-hour distribution, and today's activity log.
--   **Insights**: Navigate to the Insights page to view historical data over any date range. Click on any row in the table to see the detailed timeline for that specific day.
--   **Events**: View the raw, paginated list of every logged event in the system.
+-   **Logging**: Use your unique User ID to log transitions.
+-   **Dashboard**: Securely access your own 24-hour distribution and activity log.
+-   **Insights**: Filter historical data scoped specifically to your account.
+-   **Events**: View your raw, paginated list of logged events.
 
 ## 📱 Automation Tip (Samsung One UI)
 
@@ -66,14 +66,14 @@ You can fully automate your tracking using **Samsung Modes & Routines**:
 1.  Open **Settings** > **Modes and Routines** > **Routines**.
 2.  Create a new Routine:
     -   **If**: "Arrive at [Work Location]"
-    -   **Then**: "Open a URL": `http://your-server-ip:8080/log?place=office`
-3.  Create similar routines for "Arrive at [Home]" (`place=home`) and "Leave [Location]" (`place=outside`).
+    -   **Then**: "Open a URL": `http://your-server-ip:8080/log?userid=YOUR_ID&place=office`
+3.  Create similar routines for "Arrive at [Home]" (`place=home`) and "Leave [Location]" (`place=outside`), ensuring the `userid` and `place` parameters are correct.
 
 *Note: This requires you to host the server on a reachable IP or use a tunnel.*
 
 ## 🚧 Upcoming Features (TODO)
 
--   [ ] **Multi-User Support**: OAuth integration (Google/GitHub) and data isolation per user.
+-   [x] **Multi-User Support**: Unique User ID generation and data isolation per user.
 -   [ ] **Mobile App**: Native wrapper for better location-based automation.
 -   [ ] **Report Export**: CSV/PDF export for monthly productivity reports.
 

@@ -1,10 +1,12 @@
 package main
 
 import (
-	"database/sql"
+	"flag"
 	"fmt"
 	"log"
+	"logger-app/db"
 	"math/rand"
+	"os"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -16,6 +18,16 @@ func randomMinutes(min, max int) time.Duration {
 }
 
 func main() {
+	db.InitDB()
+
+	userID := flag.String("userid", "", "User ID to seed data for")
+	flag.Parse()
+
+	if *userID == "" {
+		fmt.Println("Usage: go run scripts/seed.go -userid <id>")
+		os.Exit(1)
+	}
+
 	loc, err := time.LoadLocation("Asia/Kolkata")
 	if err != nil {
 		log.Printf("Failed to load Asia/Kolkata: %v. Falling back to UTC.", err)
@@ -23,18 +35,12 @@ func main() {
 		time.Local = loc
 	}
 
-	db, err := sql.Open("sqlite3", "./events.db")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer db.Close()
-
-	// Clear existing data to avoid conflicts for testing
-	_, err = db.Exec("DELETE FROM events")
+	// Clear existing data for this user to avoid conflicts for testing
+	_, err = db.DB.Exec("DELETE FROM events WHERE user_id = ?", *userID)
 	if err != nil {
 		log.Fatal("Failed to clear existing events:", err)
 	}
-	fmt.Println("Cleared old events.")
+	fmt.Printf("Cleared old events for user %s.\n", *userID)
 
 	// Start from 30 days ago
 	now := time.Now()
@@ -57,7 +63,7 @@ func main() {
 		weekday := currentDate.Weekday()
 
 		insert := func(place string, t time.Time) {
-			_, err := db.Exec("INSERT INTO events(place, timestamp) VALUES(?, ?)", place, t)
+			_, err := db.DB.Exec("INSERT INTO events(user_id, place, timestamp) VALUES(?, ?, ?)", *userID, place, t)
 			if err != nil {
 				log.Fatalf("Insert failed: %v", err)
 			}
