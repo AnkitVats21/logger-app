@@ -2,9 +2,7 @@
 
 **LifeTracker** is a premium, real-time personal time-tracking application designed to help you visualize your day with precision. It automatically calculates time spent at home, office, and outside, including intelligent commute detection, all within a beautiful, dark-mode-first interface.
 
-```markdown
 ![LifeTracker Dashboard Preview](screenshot.png)
-```
 
 ## 🚀 Features
 
