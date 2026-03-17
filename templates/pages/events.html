@@ -1,0 +1,99 @@
+{{define "title"}}Event History{{end}}
+
+{{define "content"}}
+<div>
+    <header class="flex justify-between items-center mb-8">
+        <div>
+            <h1 class="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-3">
+                <i data-lucide="list-ordered" class="text-blue-600 w-8 h-8"></i>
+                Event History
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Detailed logs of location activity.</p>
+        </div>
+    </header>
+
+    <div
+        class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-700">
+                        <th class="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">ID</th>
+                        <th class="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Place</th>
+                        <th class="px-6 py-4 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Timestamp
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50 dark:divide-slate-700/50">
+                    {{ range .Events }}
+                    <tr class="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition-colors group">
+                        <td class="px-6 py-4 text-sm font-mono text-gray-400">#{{ .ID }}</td>
+                        <td class="px-6 py-4">
+                            <span class="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-blue-500"></i>
+                                {{ .Place }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            {{ .Timestamp.Format "Jan 02, 2006 15:04:05" }}
+                        </td>
+                    </tr>
+                    {{ else }}
+                    <tr>
+                        <td colspan="3" class="px-6 py-20 text-center text-gray-400 italic">No events found.</td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+
+        <div
+            class="px-6 py-4 bg-gray-50 dark:bg-slate-900/30 border-t border-gray-100 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="text-sm text-gray-500">
+                Showing Page <span class="font-bold text-gray-900 dark:text-white">{{ .CurrentPage }}</span>
+                {{ if and .TotalPages (gt .TotalPages 0) }}
+                of <span class="font-bold text-gray-900 dark:text-white">{{ .TotalPages }}</span>
+                {{ end }}
+                {{ if .TotalEvents }}
+                &nbsp;&mdash;&nbsp; {{ .TotalEvents }} total events
+                {{ end }}
+            </div>
+
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 text-sm text-gray-500">
+                    <label for="limit-select">Per page:</label>
+                    <select id="limit-select"
+                        class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-1 px-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500"
+                        onchange="window.location.href='?page=1&limit='+this.value">
+                        <option value="10" {{ if eq .Limit 10 }}selected{{ end }}>10</option>
+                        <option value="25" {{ if eq .Limit 25 }}selected{{ end }}>25</option>
+                        <option value="50" {{ if eq .Limit 50 }}selected{{ end }}>50</option>
+                        <option value="100" {{ if eq .Limit 100 }}selected{{ end }}>100</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-2">
+                    {{ if gt .CurrentPage 1 }}
+                    <a href="?page={{ sub .CurrentPage 1 }}&limit={{ .Limit }}"
+                        class="px-4 py-2 text-sm font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i> Prev
+                    </a>
+                    {{ end }}
+
+                    {{ if .HasMore }}
+                    <a href="?page={{ add .CurrentPage 1 }}&limit={{ .Limit }}"
+                        class="px-4 py-2 text-sm font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2">
+                        Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </a>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-6 text-center">
+        <a href="/dashboard" class="text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">← Back to
+            Dashboard</a>
+    </div>
+</div>
+{{end}}

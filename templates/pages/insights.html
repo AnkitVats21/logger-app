@@ -1,0 +1,361 @@
+{{define "title"}}Historical Insights{{end}}
+
+{{define "content"}}
+<div>
+    <header class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+        <div>
+            <h1 class="text-4xl font-black tracking-tight text-gray-900 dark:text-white flex items-center gap-3">
+                <i data-lucide="pie-chart" class="text-blue-600 w-10 h-10"></i>
+                Historical Insights
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Deep-dive into your past productivity and time
+                distribution.</p>
+        </div>
+    </header>
+
+    <!-- Date Range Picker -->
+    <div
+        class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 bg-white dark:bg-slate-800 p-3 rounded-2xl shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-200 dark:border-slate-700 mb-10">
+
+        <div class="flex-1 flex items-center gap-4 px-4 py-2 group">
+            <i data-lucide="calendar"
+                class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+            <div class="flex flex-col flex-1">
+                <label class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">Start
+                    Date</label>
+                <input type="date" id="start"
+                    class="bg-transparent border-none p-0 text-sm font-semibold text-gray-700 dark:text-white focus:ring-0 cursor-pointer [color-scheme:light] dark:[color-scheme:dark]">
+            </div>
+        </div>
+
+        <div class="hidden lg:block h-12 w-px bg-gray-100 dark:bg-slate-700"></div>
+
+        <div class="flex-1 flex items-center gap-4 px-4 py-2 group">
+            <i data-lucide="calendar"
+                class="w-5 h-5 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+            <div class="flex flex-col flex-1">
+                <label class="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">End
+                    Date</label>
+                <input type="date" id="end"
+                    class="bg-transparent border-none p-0 text-sm font-semibold text-gray-700 dark:text-white focus:ring-0 cursor-pointer [color-scheme:light] dark:[color-scheme:dark]">
+            </div>
+        </div>
+
+        <div
+            class="flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-slate-900/50 rounded-xl border border-gray-100 dark:border-slate-700">
+            <span class="text-[10px] font-bold text-gray-400 uppercase mr-2">Quick:</span>
+            <button onclick="setRange(7)"
+                class="text-xs font-bold px-2 py-1 rounded-md hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all">7D</button>
+            <button onclick="setRange(30)"
+                class="text-xs font-bold px-2 py-1 rounded-md hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all">30D</button>
+            <button onclick="setRange('month')"
+                class="text-xs font-bold px-2 py-1 rounded-md hover:bg-white dark:hover:bg-slate-800 hover:shadow-sm transition-all">Month</button>
+        </div>
+
+        <button onclick="loadData()" id="main-load-btn"
+            class="lg:w-auto w-full bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-bold text-sm transition-all shadow-lg shadow-blue-200 dark:shadow-none active:scale-95 flex items-center justify-center gap-2">
+            <i data-lucide="play" class="w-4 h-4 fill-current"></i>
+            LOAD DATA
+        </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center gap-3 mb-2 text-blue-600">
+                <i data-lucide="home" class="w-5 h-5"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Home</span>
+            </div>
+            <p id="sum-home" class="text-3xl font-black text-gray-900 dark:text-white">--</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center gap-3 mb-2 text-indigo-600">
+                <i data-lucide="briefcase" class="w-5 h-5"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Office</span>
+            </div>
+            <p id="sum-office" class="text-3xl font-black text-gray-900 dark:text-white">--</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center gap-3 mb-2 text-emerald-600">
+                <i data-lucide="map" class="w-5 h-5"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Outside</span>
+            </div>
+            <p id="sum-outside" class="text-3xl font-black text-gray-900 dark:text-white">--</p>
+        </div>
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700">
+            <div class="flex items-center gap-3 mb-2 text-orange-600">
+                <i data-lucide="car" class="w-5 h-5"></i>
+                <span class="text-xs font-bold uppercase tracking-wider">Commute</span>
+            </div>
+            <p id="sum-commute" class="text-3xl font-black text-gray-900 dark:text-white">--</p>
+        </div>
+    </div>
+
+    <!-- Daily Summary Table -->
+    <div
+        class="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-700">
+                    <tr>
+                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Date</th>
+                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Home</th>
+                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Office</th>
+                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Outside</th>
+                        <th class="px-8 py-5 text-[11px] font-bold text-gray-400 uppercase tracking-widest">Commute</th>
+                    </tr>
+                </thead>
+                <tbody id="table-body" class="divide-y divide-gray-50 dark:divide-slate-700/50">
+                    <tr>
+                        <td colspan="5" class="px-8 py-16 text-center">
+                            <p class="text-gray-400 italic">Enter dates and click Load to see your data.</p>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Pagination Controls -->
+<div id="pagination-controls"
+    class="mt-4 px-6 py-4 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4 hidden">
+    <div class="text-sm text-gray-500" id="page-info">
+        Showing Page <span class="font-bold text-gray-900 dark:text-white" id="current-page-num">1</span>
+        of <span class="font-bold text-gray-900 dark:text-white" id="total-page-num">1</span>
+        &nbsp;&mdash;&nbsp; <span id="total-items-num" class="font-medium text-gray-700 dark:text-gray-300">0</span>
+        total days
+    </div>
+
+    <div class="flex items-center gap-4">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <label for="insights-limit">Per page:</label>
+            <select id="insights-limit" onchange="changeLimit(this.value)"
+                class="bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg p-1 px-2 text-sm font-semibold outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+
+        <div class="flex gap-2">
+            <button id="prev-btn" onclick="changePage(-1)"
+                class="px-4 py-2 text-sm font-bold bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <i data-lucide="chevron-left" class="w-4 h-4"></i> Prev
+            </button>
+            <button id="next-btn" onclick="changePage(1)"
+                class="px-4 py-2 text-sm font-bold bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+</div>
+</div>
+
+<script>
+    let currentPage = 1;
+    let currentLimit = 50;
+
+    function changeLimit(newLimit) {
+        currentLimit = parseInt(newLimit);
+        currentPage = 1;
+        loadData(currentPage);
+    }
+
+    function changePage(delta) {
+        currentPage += delta;
+        loadData(currentPage);
+    }
+
+    async function loadData(page = 1) {
+        currentPage = page;
+        const start = document.getElementById("start").value;
+        const end = document.getElementById("end").value;
+
+        if (!start || !end) return alert("Please select both dates");
+
+        const btn = document.getElementById("main-load-btn");
+        const originalContent = btn.innerHTML;
+
+        btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Loading...`;
+        btn.disabled = true;
+        lucide.createIcons();
+
+        try {
+            const res = await fetch(`/summary/range?start=${start}&end=${end}&page=${currentPage}&limit=${currentLimit}`);
+
+            if (!res.ok) {
+                throw new Error(`API Error: ${res.status} ${res.statusText}`);
+            }
+
+            const data = await res.json();
+
+            // Update summary cards
+            document.getElementById("sum-home").innerText = data.total_home_time || "0h 0m";
+            document.getElementById("sum-office").innerText = data.total_office_time || "0h 0m";
+            document.getElementById("sum-outside").innerText = data.total_outside_time || "0h 0m";
+            document.getElementById("sum-commute").innerText = data.total_commute_time || "0h 0m";
+
+            // Update table rows
+            const tbody = document.getElementById("table-body");
+            tbody.innerHTML = "";
+
+            if (data.days && data.days.length > 0) {
+                // Sort days descending
+                data.days.sort((a, b) => b.date.localeCompare(a.date));
+
+                data.days.forEach(row => {
+                    const tr = document.createElement("tr");
+                    tr.classList.add("cursor-pointer", "hover:bg-blue-50/50", "dark:hover:bg-blue-900/20", "transition-colors", "group");
+
+                    // Click handler for expansion
+                    tr.onclick = function () {
+                        const nextRow = tr.nextElementSibling;
+                        if (nextRow && nextRow.classList.contains('timeline-expansion')) {
+                            nextRow.remove();
+                            tr.classList.remove('bg-blue-50', 'dark:bg-slate-800');
+                        } else {
+                            // Collapse currently open rows
+                            document.querySelectorAll('.timeline-expansion').forEach(el => {
+                                el.previousElementSibling.classList.remove('bg-blue-50', 'dark:bg-slate-800');
+                                el.remove();
+                            });
+
+                            tr.classList.add('bg-blue-50', 'dark:bg-slate-800');
+                            const expTr = document.createElement('tr');
+                            expTr.classList.add('timeline-expansion', 'bg-gradient-to-b', 'from-gray-50/80', 'to-white', 'dark:from-slate-900/80', 'dark:to-slate-800');
+                            const td = document.createElement('td');
+                            td.colSpan = 5;
+                            td.className = "p-6 pt-4 border-b border-gray-100 dark:border-slate-700";
+                            td.innerHTML = renderTimelineHTML(row.segments);
+                            expTr.appendChild(td);
+                            tr.after(expTr);
+                            lucide.createIcons();
+                        }
+                    }
+
+                    tr.innerHTML = `
+                        <td class="px-8 py-4 text-sm font-medium text-gray-900 dark:text-white flex items-center justify-between">
+                            ${row.date || "N/A"}
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-400"></i>
+                        </td>
+                        <td class="px-8 py-4 text-sm text-gray-600 dark:text-gray-300">${row.home_time || "0h 0m"}</td>
+                        <td class="px-8 py-4 text-sm text-gray-600 dark:text-gray-300">${row.office_time || "0h 0m"}</td>
+                        <td class="px-8 py-4 text-sm text-gray-600 dark:text-gray-300">${row.outside_time || "0h 0m"}</td>
+                        <td class="px-8 py-4 text-sm text-gray-600 dark:text-gray-300">${row.commute_time || "0h 0m"}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-8 py-16 text-center"><p class="text-gray-400 italic">No data available for selected range.</p></td></tr>`;
+            }
+
+            // Update Pagination UI
+            const pagControls = document.getElementById("pagination-controls");
+            if (data.total_items > 0) {
+                pagControls.classList.remove('hidden');
+                document.getElementById("current-page-num").innerText = data.current_page;
+                document.getElementById("total-page-num").innerText = data.total_pages;
+                document.getElementById("total-items-num").innerText = data.total_items;
+
+                document.getElementById("prev-btn").disabled = data.current_page <= 1;
+                document.getElementById("next-btn").disabled = data.current_page >= data.total_pages;
+            } else {
+                pagControls.classList.add('hidden');
+            }
+
+        } catch (err) {
+            console.error("API Error:", err);
+            alert("Failed to load data: " + err.message);
+            document.getElementById("table-body").innerHTML = `<tr><td colspan="5" class="px-8 py-16 text-center"><p class="text-red-400">Error loading data. Check console for details.</p></td></tr>`;
+        } finally {
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+            lucide.createIcons();
+        }
+    }
+
+    function renderTimelineHTML(segments) {
+        if (!segments || segments.length === 0) {
+            return `<p class="text-sm text-gray-400 italic font-semibold">No detailed timeline recorded for this day.</p>`;
+        }
+
+        let html = `<div class="relative pl-6 space-y-4 before:absolute before:inset-0 before:ml-8 before:-translate-x-px before:h-full before:w-0.5 before:-z-10 before:bg-gradient-to-b before:from-blue-200 before:via-blue-400 before:to-transparent">`;
+
+        segments.forEach((seg, index) => {
+            let icon = "map-pin";
+            let color = "bg-gray-100 text-gray-500 border-gray-300";
+
+            if (seg.place === 'home') {
+                icon = "home";
+                color = "bg-blue-50 text-blue-600 border-blue-200";
+            } else if (seg.place === 'office') {
+                icon = "briefcase";
+                color = "bg-indigo-50 text-indigo-600 border-indigo-200";
+            } else if (seg.place === 'outside') {
+                icon = "map";
+                color = "bg-emerald-50 text-emerald-600 border-emerald-200";
+            } else if (seg.place === 'commute') {
+                icon = "car";
+                color = "bg-orange-50 text-orange-600 border-orange-200";
+            }
+
+            html += `
+                <div class="relative flex items-center justify-between group">
+                    <!-- Dot -->
+                    <div class="absolute inset-y-0 left-0 flex items-center translate-x-[-1.3rem] z-10">
+                        <div class="w-5 h-5 rounded-full border-4 border-white dark:border-slate-800 ${color.split(' ')[0]} shadow-sm"></div>
+                    </div>
+
+                    <!-- Content -->
+                    <div class="bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 p-3 rounded-2xl shadow-sm w-full md:w-[60%] lg:w-[40%] transition-transform hover:shadow-md">
+                        <div class="flex items-center justify-between gap-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 rounded-xl ${color} dark:bg-slate-700 dark:border-none">
+                                    <i data-lucide="${icon}" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-gray-900 dark:text-white capitalize">${seg.place}</h4>
+                                    <span class="text-[11px] font-bold text-gray-400 tracking-wider">${seg.start} — ${seg.end}</span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <span class="inline-block px-2 py-1 bg-gray-50 dark:bg-slate-700/50 rounded-lg text-[11px] font-bold text-gray-600 dark:text-gray-300">
+                                    ${seg.duration}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        html += `</div>`;
+        return html;
+    }
+
+    function setRange(days) {
+        const endInput = document.getElementById('end');
+        const startInput = document.getElementById('start');
+        const today = new Date();
+        let startDate = new Date();
+
+        if (days === 'month') {
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        } else {
+            startDate.setDate(today.getDate() - days);
+        }
+
+        const formatDate = (date) => date.toISOString().split('T')[0];
+        endInput.value = formatDate(today);
+        startInput.value = formatDate(startDate);
+
+        loadData();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        setRange(1);
+    });
+</script>
+{{end}}
